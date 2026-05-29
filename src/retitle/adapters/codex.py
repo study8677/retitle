@@ -14,8 +14,8 @@ import sqlite3
 from pathlib import Path
 
 from ..models import Message, Session
-from .base import Adapter
 from ._sqlite import connect_read, connect_write
+from .base import Adapter
 
 _VER_RE = re.compile(r"state_(\d+)\.sqlite$")
 _FULL_COLS = "id,title,rollout_path,updated_at_ms,cwd,archived,first_user_message"

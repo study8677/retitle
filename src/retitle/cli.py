@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
-from . import __version__
+from . import __version__, service, util
 from . import config as config_mod
-from . import service, util
 from .adapters import all_adapters, get_adapters
 from .engine import Engine
 from .namers import NAMER_NAMES, get_namer
@@ -191,6 +191,88 @@ def cmd_uninstall(args) -> int:
     return service.uninstall()
 
 
+def _highlight(text: str, query: str) -> str:
+    """Bold-yellow every case-insensitive occurrence of query in text."""
+    if not query:
+        return text
+    low, q = text.lower(), query.lower()
+    out, i = [], 0
+    while True:
+        j = low.find(q, i)
+        if j < 0:
+            out.append(text[i:])
+            return "".join(out)
+        out.append(text[i:j])
+        out.append(_c(text[j : j + len(query)], "1;33"))
+        i = j + len(query)
+
+
+def _content_hit(adapter, session, q: str) -> str | None:
+    """A short snippet around the first message that contains q, else None."""
+    try:
+        msgs = adapter.read_transcript(session)
+    except Exception:
+        return None
+    for m in msgs:
+        text = util.clean_text(m.text)
+        idx = text.lower().find(q)
+        if idx >= 0:
+            snippet = text[max(0, idx - 30) : idx + len(q) + 40].strip()
+            return trunc(snippet, 80)
+    return None
+
+
+def cmd_search(args) -> int:
+    cfg = _apply_overrides(config_mod.load(), args)
+    util.set_verbose(args.verbose)
+    adapters = get_adapters(cfg)
+    if not adapters:
+        print("No supported tools found (Claude Code, Codex, Cursor).")
+        return 1
+
+    q = args.query.lower()
+    since = util.now() - args.days * 86400 if args.days else 0.0
+    now = util.now()
+    hits: list[tuple] = []  # (last_active, label, session, snippet)
+    for adapter in adapters:
+        try:
+            sessions = adapter.discover(since)
+        except Exception as exc:
+            util.log(f"{adapter.name}: search failed: {exc}", level="warn")
+            continue
+        for s in sessions:
+            if q in (s.title or "").lower():
+                hits.append((s.last_active, adapter.label, s, None))
+            elif args.content:
+                snippet = _content_hit(adapter, s, q)
+                if snippet:
+                    hits.append((s.last_active, adapter.label, s, snippet))
+    hits.sort(key=lambda h: h[0], reverse=True)
+
+    if not hits:
+        scope = "titles and content" if args.content else "titles"
+        print(dim(f'No sessions matching "{args.query}" in {scope} (last {args.days}d).'))
+        if not args.content:
+            print(dim("Tip: add --content to also search message text."))
+        return 0
+
+    shown = hits[: args.limit]
+    print()
+    print(bold(f'🔍 "{args.query}" — {len(hits)} match{"" if len(hits) == 1 else "es"}'))
+    print()
+    for _last_active, label, s, snippet in shown:
+        when = util.fmt_dur(s.idle_seconds(now))
+        loc = dim("  " + os.path.basename(s.cwd.rstrip("/"))) if s.cwd else ""
+        title = _highlight(trunc(s.title or "—", 50), args.query)
+        print(f"  {label:<12} {when:>5}  {title}{loc}")
+        if snippet:
+            print(f"               {dim('…')} {_highlight(snippet, args.query)}")
+    if len(hits) > len(shown):
+        print(dim(f"  … and {len(hits) - len(shown)} more"))
+    print()
+    return 0
+
+
 # --------------------------------------------------------------------------- #
 # argument parsing
 # --------------------------------------------------------------------------- #
@@ -237,6 +319,26 @@ def build_parser() -> argparse.ArgumentParser:
     _add_common(pl)
     pl.add_argument("--limit", type=int, default=40, help="max rows per tool")
     pl.set_defaults(func=cmd_list, dry_run=True)
+
+    psr = sub.add_parser(
+        "search", help="find sessions across all tools by title (or --content)"
+    )
+    psr.add_argument("query", help="text to search for")
+    psr.add_argument(
+        "--content", action="store_true", help="also search message text (slower)"
+    )
+    psr.add_argument(
+        "--tool",
+        action="append",
+        choices=config_mod.ALL_TOOLS,
+        help="limit to specific tool(s); repeatable",
+    )
+    psr.add_argument(
+        "--days", type=int, default=90, help="how far back to search (default: 90)"
+    )
+    psr.add_argument("--limit", type=int, default=30, help="max results to show")
+    psr.add_argument("-v", "--verbose", action="store_true", help="verbose logging")
+    psr.set_defaults(func=cmd_search)
 
     ps = sub.add_parser("status", help="show config, detected tools and daemon status")
     ps.set_defaults(func=cmd_status)

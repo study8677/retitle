@@ -165,7 +165,11 @@ def test_end_to_end_real_claude_adapter(tmp_path, monkeypatch):
     sid = "22222222-2222-2222-2222-222222222222"
     f = proj / f"{sid}.jsonl"
     rows = [
-        {"type": "last-prompt", "lastPrompt": "Implement CSV export for the reports page", "sessionId": sid},
+        {
+            "type": "last-prompt",
+            "lastPrompt": "Implement CSV export for the reports page",
+            "sessionId": sid,
+        },
         {"type": "ai-title", "aiTitle": "Initial topic", "sessionId": sid},
     ]
     f.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n")

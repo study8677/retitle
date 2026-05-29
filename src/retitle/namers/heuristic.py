@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import re
 
-from ..models import Message
 from ..util import clean_text, is_trivial
 from .base import Namer
 

@@ -203,7 +203,11 @@ def _cursor_db_with_headers(tmp_path, cid, composer_data_value):
     con = sqlite3.connect(db)
     con.execute("CREATE TABLE ItemTable (key TEXT PRIMARY KEY, value TEXT)")
     con.execute("CREATE TABLE cursorDiskKV (key TEXT PRIMARY KEY, value TEXT)")
-    headers = {"allComposers": [{"composerId": cid, "name": "Old", "lastUpdatedAt": int(time.time() * 1000)}]}
+    headers = {
+        "allComposers": [
+            {"composerId": cid, "name": "Old", "lastUpdatedAt": int(time.time() * 1000)}
+        ]
+    }
     con.execute(
         "INSERT INTO ItemTable VALUES (?,?)", ("composer.composerHeaders", json.dumps(headers))
     )

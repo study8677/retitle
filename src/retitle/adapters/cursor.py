@@ -18,8 +18,8 @@ import os
 from pathlib import Path
 
 from ..models import Message, Session
-from .base import Adapter
 from ._sqlite import connect_read, connect_write
+from .base import Adapter
 
 _HEADERS_KEY = "composer.composerHeaders"
 _MAX_BUBBLES = 40  # only the recent tail matters for naming

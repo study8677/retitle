@@ -74,7 +74,12 @@ class Engine:
             return RenamePlan(s, "skip", reason="namer returned nothing")
         if s.title and title.casefold() == s.title.casefold():
             return RenamePlan(
-                s, "skip", new_title=title, content_sig=sig, mark_seen=True, reason="already current"
+                s,
+                "skip",
+                new_title=title,
+                content_sig=sig,
+                mark_seen=True,
+                reason="already current",
             )
         return RenamePlan(
             s,

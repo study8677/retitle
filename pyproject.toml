@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "retitle"
-version = "0.1.0"
+version = "0.2.0"
 description = "Auto-rename idle Claude Code, Codex & Cursor sessions to match what they're actually about."
 readme = "README.md"
 license = { text = "MIT" }
@@ -34,7 +34,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "ruff>=0.6"]
 
 [project.urls]
 Homepage = "https://github.com/study8677/retitle"
@@ -50,3 +50,9 @@ packages = ["src/retitle"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

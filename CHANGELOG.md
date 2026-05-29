@@ -3,6 +3,15 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this project uses [SemVer](https://semver.org/).
 
+## [0.2.0] - 2026-05-29
+
+### Added
+- `retitle search <query>` — find sessions across Claude Code, Codex and Cursor
+  at once, by title (fast) or with `--content` to grep message text, with
+  highlighted matches and snippets.
+- `SECURITY.md` documenting the privacy/data-safety model and how to report issues.
+- Ruff linting, enforced in CI.
+
 ## [0.1.0] - 2026-05-29
 
 Initial release.

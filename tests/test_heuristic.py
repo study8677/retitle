@@ -31,7 +31,8 @@ def test_ignores_noise_only_session():
 
 
 def test_cjk_title_is_bounded():
-    msgs = [Message("user", "帮我把这个非常长的中文需求描述变成一个合理长度的标题不要太长了谢谢你了really")]
+    long_cjk = "帮我把这个特别长的中文需求描述变成一个合理长度的标题不要太长了谢谢"
+    msgs = [Message("user", long_cjk)]
     title = namer.generate(msgs)
     assert title
     assert len(title) <= 22

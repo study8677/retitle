@@ -10,7 +10,8 @@ still says *"Check if branches are synced."* Multiply that by fifty sessions and
 is useless for finding anything.
 
 **`retitle` runs quietly in the background and, whenever a session goes idle, rewrites its
-title to match the latest work — across all three tools.**
+title to match the latest work — across all three tools.** And `retitle search` lets you
+find any past session across Claude Code, Codex and Cursor at once.
 
 [![CI](https://github.com/study8677/retitle/actions/workflows/ci.yml/badge.svg)](https://github.com/study8677/retitle/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -68,6 +69,24 @@ Cursor
 
 7 session(s) would be renamed next pass (idle ≥ 5m, namer=heuristic).
 Run `retitle once` to apply, or `retitle install` to do it continuously.
+```
+
+---
+
+## 🔍 Also: find any past session
+
+Accurate titles are only half the point — the other half is *finding* the session
+again. `retitle search` looks across Claude Code, Codex and Cursor at once:
+
+```console
+$ retitle search "stripe webhook"
+
+🔍 "stripe webhook" — 2 matches
+
+  Cursor        3h    Wire up the Stripe webhook handler    payments-api
+  Claude Code   2d    Debug the Stripe webhook signature    billing-svc
+
+$ retitle search postgres --content      # also grep message text, with snippets
 ```
 
 ---
@@ -192,6 +211,7 @@ Any field can be overridden per-invocation: `retitle run --idle 600 --namer anth
 | Command | Description |
 |---------|-------------|
 | `retitle list` | Preview every discovered session and its proposed title (writes nothing) |
+| `retitle search <q>` | Find sessions across all tools by title (add `--content` to grep message text) |
 | `retitle once` | Run a single rename pass and exit |
 | `retitle run` | Run continuously in the foreground (add `--once`, `--dry-run`) |
 | `retitle install` | Install + start the background service (launchd on macOS, systemd on Linux) |
