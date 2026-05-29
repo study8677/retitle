@@ -23,7 +23,7 @@ title to match the latest work — across all three tools.**
 </div>
 
 <p align="center">
-  <img src="assets/demo.svg" alt="retitle rewrites stale Claude Code, Codex and Cursor session titles to match the latest work" width="820">
+  <img src="https://raw.githubusercontent.com/study8677/retitle/main/assets/demo.svg" alt="retitle rewrites stale Claude Code, Codex and Cursor session titles to match the latest work" width="820">
 </p>
 
 <p align="center"><b>30-second try</b> — no install, writes nothing:</p>
