@@ -7,6 +7,8 @@ import json
 import sqlite3
 import time
 
+import pytest
+
 from retitle.adapters import claude_code, codex, cursor
 
 
@@ -193,3 +195,53 @@ def test_cursor_adapter_roundtrip(tmp_path, monkeypatch):
     con.close()
     assert json.loads(hraw)["allComposers"][0]["name"] == "SQL optimization"
     assert json.loads(craw)["name"] == "SQL optimization"
+
+
+def _cursor_db_with_headers(tmp_path, cid, composer_data_value):
+    """Build a Cursor DB with a header row and an optional composerData row."""
+    db = tmp_path / "state.vscdb"
+    con = sqlite3.connect(db)
+    con.execute("CREATE TABLE ItemTable (key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("CREATE TABLE cursorDiskKV (key TEXT PRIMARY KEY, value TEXT)")
+    headers = {"allComposers": [{"composerId": cid, "name": "Old", "lastUpdatedAt": int(time.time() * 1000)}]}
+    con.execute(
+        "INSERT INTO ItemTable VALUES (?,?)", ("composer.composerHeaders", json.dumps(headers))
+    )
+    if composer_data_value is not None:
+        con.execute(
+            "INSERT INTO cursorDiskKV VALUES (?,?)", (f"composerData:{cid}", composer_data_value)
+        )
+    con.commit()
+    con.close()
+    return db
+
+
+def _header_name(db, cid):
+    con = sqlite3.connect(db)
+    raw = con.execute(
+        "SELECT value FROM ItemTable WHERE key='composer.composerHeaders'"
+    ).fetchone()[0]
+    con.close()
+    return json.loads(raw)["allComposers"][0]["name"]
+
+
+def test_cursor_set_title_missing_blob_raises_and_rolls_back(tmp_path, monkeypatch):
+    cid = "comp-x"
+    db = _cursor_db_with_headers(tmp_path, cid, composer_data_value=None)  # no composerData row
+    monkeypatch.setattr(cursor, "_vscdb", lambda: db)
+    adapter = cursor.CursorAdapter()
+    s = adapter.discover(0)[0]
+    with pytest.raises(Exception):
+        adapter.set_title(s, "New")
+    assert _header_name(db, cid) == "Old"  # header NOT half-updated
+
+
+def test_cursor_set_title_corrupt_blob_rolls_back(tmp_path, monkeypatch):
+    cid = "comp-y"
+    db = _cursor_db_with_headers(tmp_path, cid, composer_data_value="{not valid json")
+    monkeypatch.setattr(cursor, "_vscdb", lambda: db)
+    adapter = cursor.CursorAdapter()
+    s = adapter.discover(0)[0]
+    with pytest.raises(Exception):
+        adapter.set_title(s, "New")
+    assert _header_name(db, cid) == "Old"  # atomic: header untouched

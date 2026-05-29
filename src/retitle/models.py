@@ -48,3 +48,6 @@ class RenamePlan:
     new_title: str | None = None
     reason: str = ""
     content_sig: str | None = None
+    # True once we've fully read+evaluated this exact state, so the next pass
+    # can skip re-reading the transcript while last_active is unchanged.
+    mark_seen: bool = False

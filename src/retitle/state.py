@@ -43,10 +43,19 @@ class StateStore:
         entry = self._data.setdefault(tool, {}).setdefault(sid, {})
         entry.update(fields)
 
-    def prune(self, alive: set[tuple[str, str]]) -> None:
-        """Drop bookkeeping for sessions no longer discoverable."""
+    def prune(self, alive: set[tuple[str, str]], healthy: set[str]) -> None:
+        """Drop bookkeeping for sessions no longer discoverable.
+
+        Only prunes tools whose adapter discovered successfully this pass
+        (``healthy``). If an adapter errored (e.g. its database was briefly
+        locked), we keep all of its state untouched — otherwise the next pass
+        would treat every one of its sessions as brand-new and could clobber
+        titles the user set by hand.
+        """
         self._ensure()
         for tool in list(self._data.keys()):
+            if tool not in healthy:
+                continue  # adapter failed this pass; leave its state intact
             for sid in list(self._data[tool].keys()):
                 if (tool, sid) not in alive:
                     del self._data[tool][sid]

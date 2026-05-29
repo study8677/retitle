@@ -102,7 +102,7 @@ def cmd_list(args) -> int:
         print("No supported tools found (Claude Code, Codex, Cursor).")
         return 1
 
-    plans, _ = engine.plan()
+    plans, _, _ = engine.plan()
     by_tool: dict[str, list] = {}
     for adapter, plan in plans:
         by_tool.setdefault(adapter.label, []).append(plan)

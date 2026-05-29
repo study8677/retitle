@@ -137,14 +137,14 @@ class ClaudeCodeAdapter(Adapter):
             ensure_ascii=False,
             separators=(",", ":"),  # match Claude Code's own compact JSONL
         ).encode("utf-8")
-        prefix = b""
-        try:
-            if path.stat().st_size > 0:
-                with open(path, "rb") as fh:
-                    fh.seek(-1, 2)
-                    if fh.read(1) != b"\n":
-                        prefix = b"\n"
-        except OSError:
-            pass
-        with open(path, "ab") as fh:
+        # One handle in append mode: the write always lands at EOF (O_APPEND)
+        # regardless of where we seek to read, so there's no check-then-write
+        # gap. A leading newline is added only if the file doesn't end in one.
+        with open(path, "a+b") as fh:
+            fh.seek(0, 2)
+            prefix = b""
+            if fh.tell() > 0:
+                fh.seek(-1, 2)
+                if fh.read(1) != b"\n":
+                    prefix = b"\n"
             fh.write(prefix + line + b"\n")

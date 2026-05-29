@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import plistlib
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -75,6 +76,7 @@ def _install_launchd() -> int:
     }
     with open(plist, "wb") as fh:
         plistlib.dump(spec, fh)
+    plist.chmod(0o600)  # may embed API keys — keep it owner-only
     subprocess.run(["launchctl", "unload", str(plist)], capture_output=True)
     res = subprocess.run(
         ["launchctl", "load", "-w", str(plist)], capture_output=True, text=True
@@ -102,9 +104,9 @@ def _uninstall_launchd() -> int:
 def _install_systemd() -> int:
     unit = _systemd_unit()
     unit.parent.mkdir(parents=True, exist_ok=True)
-    exec_start = " ".join(_program_args())
+    exec_start = " ".join(shlex.quote(a) for a in _program_args())
     env_lines = "\n".join(
-        f"Environment={k}={v}" for k, v in _passthrough_env().items()
+        f'Environment="{k}={v}"' for k, v in _passthrough_env().items()
     )
     unit.write_text(
         f"""[Unit]

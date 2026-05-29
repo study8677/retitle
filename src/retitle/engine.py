@@ -45,7 +45,11 @@ class Engine:
             return RenamePlan(s, "skip", reason=f"active ({util.fmt_dur(idle)} idle)")
 
         prev = self.state.get(adapter.name, s.id)
-        if prev and prev.get("content_sig") and prev.get("seen_active") == s.last_active:
+        # If nothing has changed since we last fully evaluated this session,
+        # skip without re-reading the transcript. seen_active is only stored
+        # after a real evaluation (never while a session was merely active), so
+        # a match here genuinely means "no new activity".
+        if prev and prev.get("seen_active") == s.last_active:
             return RenamePlan(s, "skip", reason="no activity since last check")
 
         msgs = adapter.read_transcript(s)
@@ -53,35 +57,49 @@ class Engine:
             m for m in msgs if m.role == "user" and not util.is_trivial(m.text)
         ]
         if len(substantive) < self.cfg.min_user_messages:
-            return RenamePlan(s, "skip", reason="no substantive user messages")
+            return RenamePlan(s, "skip", mark_seen=True, reason="no substantive user messages")
 
         sig = util.signature(msgs)
         if prev and prev.get("content_sig") == sig:
-            return RenamePlan(s, "skip", content_sig=sig, reason="unchanged since last rename")
+            return RenamePlan(
+                s, "skip", content_sig=sig, mark_seen=True, reason="unchanged since last rename"
+            )
 
         raw = self.namer.generate(
             substantive_only(msgs), old_title=s.title, cwd=s.cwd, tool=adapter.name
         )
         title = util.shape_title(raw or "")
         if not title:
+            # Could be a transient namer failure — don't cache, retry next pass.
             return RenamePlan(s, "skip", reason="namer returned nothing")
         if s.title and title.casefold() == s.title.casefold():
-            return RenamePlan(s, "skip", new_title=title, content_sig=sig, reason="already current")
+            return RenamePlan(
+                s, "skip", new_title=title, content_sig=sig, mark_seen=True, reason="already current"
+            )
         return RenamePlan(
-            s, "rename", new_title=title, content_sig=sig, reason=f"idle {util.fmt_dur(idle)}"
+            s,
+            "rename",
+            new_title=title,
+            content_sig=sig,
+            mark_seen=True,
+            reason=f"idle {util.fmt_dur(idle)}",
         )
 
-    def plan(self, now_ts: float | None = None) -> tuple[list[tuple[Adapter, RenamePlan]], set]:
+    def plan(
+        self, now_ts: float | None = None
+    ) -> tuple[list[tuple[Adapter, RenamePlan]], set, set]:
         now_ts = util.now() if now_ts is None else now_ts
         since = now_ts - self.cfg.max_age_days * 86400
         plans: list[tuple[Adapter, RenamePlan]] = []
         alive: set[tuple[str, str]] = set()
+        healthy: set[str] = set()  # adapters that discovered without error
         for adapter in self.adapters:
             try:
                 sessions = adapter.discover(since)
             except Exception as exc:  # one bad tool shouldn't sink the pass
                 util.log(f"{adapter.name}: discover failed: {exc}", level="warn")
                 continue
+            healthy.add(adapter.name)
             for s in sessions:
                 alive.add((adapter.name, s.id))
                 try:
@@ -90,15 +108,16 @@ class Engine:
                     util.log(
                         f"{adapter.name}: planning {s.short_id} failed: {exc}", level="warn"
                     )
-        return plans, alive
+        return plans, alive, healthy
 
     # -- applying ----------------------------------------------------------- #
     def _record(self, adapter: Adapter, plan: RenamePlan, now_ts: float) -> None:
         s = plan.session
         fields: dict = {"last_seen": now_ts}
+        if plan.mark_seen:
+            fields["seen_active"] = s.last_active
         if plan.content_sig:
             fields["content_sig"] = plan.content_sig
-            fields["seen_active"] = s.last_active
         if plan.new_title:
             fields["title"] = plan.new_title
         if plan.action == "rename":
@@ -108,7 +127,7 @@ class Engine:
     def tick(self) -> tuple[int, int]:
         """Run a single pass. Returns (renamed_count, considered_count)."""
         now_ts = util.now()
-        plans, alive = self.plan(now_ts)
+        plans, alive, healthy = self.plan(now_ts)
         renamed = 0
         for adapter, plan in plans:
             if plan.action == "rename":
@@ -139,7 +158,7 @@ class Engine:
                     level="debug",
                 )
         if not self.cfg.dry_run:
-            self.state.prune(alive)
+            self.state.prune(alive, healthy)
             self.state.save()
         return renamed, len(plans)
 

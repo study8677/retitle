@@ -171,39 +171,47 @@ class CursorAdapter(Adapter):
             con.close()
 
     def set_title(self, session: Session, title: str) -> None:
+        # Both title copies (list registry + per-composer blob) must move
+        # together, atomically. We take the write lock up front (BEGIN
+        # IMMEDIATE) to close the read-then-write race with a running Cursor,
+        # and roll back on any error so we never commit a half update. Raising
+        # here lets the engine log a warning and *not* record a false success.
         db = session.meta["db"]
         con = connect_write(db)
+        con.isolation_level = None  # we manage the transaction explicitly
         try:
-            # 1) the list-view registry
+            con.execute("BEGIN IMMEDIATE")
             raw = _item(con, _HEADERS_KEY)
-            if raw:
-                try:
-                    data = json.loads(raw)
-                    for c in data.get("allComposers", []):
-                        if isinstance(c, dict) and c.get("composerId") == session.id:
-                            c["name"] = title
-                            break
-                    con.execute(
-                        "UPDATE ItemTable SET value = ? WHERE key = ?",
-                        (json.dumps(data, ensure_ascii=False), _HEADERS_KEY),
-                    )
-                except json.JSONDecodeError:
-                    pass
-            # 2) the per-composer blob
             kraw = _kv(con, f"composerData:{session.id}")
-            if kraw:
-                try:
-                    cdata = json.loads(kraw)
-                    cdata["name"] = title
-                    con.execute(
-                        "UPDATE cursorDiskKV SET value = ? WHERE key = ?",
-                        (
-                            json.dumps(cdata, ensure_ascii=False),
-                            f"composerData:{session.id}",
-                        ),
-                    )
-                except json.JSONDecodeError:
-                    pass
+            if not raw or not kraw:
+                raise RuntimeError(f"composer {session.id}: title rows missing")
+
+            data = json.loads(raw)
+            found = False
+            for c in data.get("allComposers", []):
+                if isinstance(c, dict) and c.get("composerId") == session.id:
+                    c["name"] = title
+                    found = True
+                    break
+            if not found:
+                raise RuntimeError(f"composer {session.id} not in composerHeaders")
+
+            cdata = json.loads(kraw)
+            cdata["name"] = title
+
+            r1 = con.execute(
+                "UPDATE ItemTable SET value = ? WHERE key = ?",
+                (json.dumps(data, ensure_ascii=False), _HEADERS_KEY),
+            )
+            r2 = con.execute(
+                "UPDATE cursorDiskKV SET value = ? WHERE key = ?",
+                (json.dumps(cdata, ensure_ascii=False), f"composerData:{session.id}"),
+            )
+            if r1.rowcount < 1 or r2.rowcount < 1:
+                raise RuntimeError(f"composer {session.id}: update affected no rows")
             con.commit()
+        except Exception:
+            con.rollback()
+            raise
         finally:
             con.close()

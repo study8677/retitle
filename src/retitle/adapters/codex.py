@@ -84,7 +84,7 @@ class CodexAdapter(Adapter):
             out: list[Session] = []
             for row in cur.fetchall():
                 r = dict(zip(cols, row))
-                if r.get("archived") not in (0, None):
+                if r.get("archived"):  # skip archived threads (truthy flag)
                     continue
                 updated = r.get("updated_at_ms")
                 if not updated:

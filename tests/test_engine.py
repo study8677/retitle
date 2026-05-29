@@ -113,6 +113,44 @@ def test_dry_run_writes_nothing(tmp_path):
     assert adapter.writes == []
 
 
+def test_discover_failure_preserves_state(tmp_path):
+    """If an adapter's discover() throws, its state must NOT be pruned —
+    otherwise the next pass treats every session as new and could clobber
+    titles the user edited by hand."""
+    adapter = FakeAdapter([_idle_session()], TRANSCRIPT)
+    eng = _engine(tmp_path, adapter, FakeNamer("Billing export"))
+    eng.tick()
+    assert eng.state.get("fake", "s1") is not None
+    assert eng.state.get("fake", "s1").get("content_sig")
+
+    def boom(_since):
+        raise RuntimeError("database is locked")
+
+    adapter.discover = boom
+    eng.tick()  # discover fails this pass
+    assert eng.state.get("fake", "s1") is not None  # state survived
+    assert eng.state.get("fake", "s1").get("content_sig")
+
+
+def test_skips_reread_when_no_activity(tmp_path):
+    """Once evaluated, an unchanged session is skipped without re-reading."""
+    s = _idle_session()
+    reads = {"n": 0}
+    transcripts = {"s1": [Message("user", "Build the billing export feature")]}
+
+    class CountingAdapter(FakeAdapter):
+        def read_transcript(self, session):
+            reads["n"] += 1
+            return transcripts[session.id]
+
+    adapter = CountingAdapter([s], transcripts)
+    eng = _engine(tmp_path, adapter, FakeNamer("Billing export"))
+    eng.tick()
+    eng.tick()
+    eng.tick()
+    assert reads["n"] == 1  # only the first pass read the transcript
+
+
 def test_end_to_end_real_claude_adapter(tmp_path, monkeypatch):
     """Full path: real ClaudeCodeAdapter + real Engine + real file I/O."""
     import json
