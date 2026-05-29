@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 简体中文文档 (Chinese README)
+    url: https://github.com/study8677/retitle/blob/main/README.zh-CN.md
+    about: 中文使用说明

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="432" viewBox="0 0 820 432" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15">
+  <rect x="0.5" y="0.5" width="819" height="431" rx="10" fill="#0d1117" stroke="#30363d"/>
+  <circle cx="24" cy="20" r="6" fill="#ff5f56"/>
+  <circle cx="46" cy="20" r="6" fill="#febc2e"/>
+  <circle cx="68" cy="20" r="6" fill="#28c840"/>
+  <text x="410" y="25" text-anchor="middle" fill="#6e7681" font-size="13">retitle — keep your AI coding sessions named right</text>
+  <line x1="0" y1="39" x2="820" y2="39" stroke="#21262d"/>
+
+  <text x="28" y="74"><tspan fill="#3fb950">$ </tspan><tspan fill="#e6edf3">retitle list</tspan></text>
+
+  <text x="28" y="110" fill="#58a6ff" font-weight="bold">Claude Code</text>
+  <text y="138"><tspan x="118" text-anchor="end" fill="#8b949e">16m</tspan><tspan x="136" fill="#e6edf3">Check if branches are synced</tspan><tspan x="424" fill="#3fb950">&#8594; Implement the audit-log feature</tspan></text>
+  <text y="164"><tspan x="118" text-anchor="end" fill="#8b949e">34m</tspan><tspan x="136" fill="#484f58">&#8212;</tspan><tspan x="424" fill="#3fb950">&#8594; Fix dashboard white-screen on load</tspan></text>
+  <text y="190"><tspan x="118" text-anchor="end" fill="#8b949e">2m</tspan><tspan x="136" fill="#e6edf3">Refactor the deploy script</tspan><tspan x="424" fill="#6e7681">&#183; active</tspan></text>
+
+  <text x="28" y="226" fill="#58a6ff" font-weight="bold">Codex</text>
+  <text y="254"><tspan x="118" text-anchor="end" fill="#8b949e">1.2h</tspan><tspan x="136" fill="#e6edf3">Set up the new service</tspan><tspan x="424" fill="#3fb950">&#8594; Design the session auto-rename flow</tspan></text>
+  <text y="280"><tspan x="118" text-anchor="end" fill="#8b949e">2.1h</tspan><tspan x="136" fill="#e6edf3">Review the API changes</tspan><tspan x="424" fill="#6e7681">&#183; no new content since last rename</tspan></text>
+
+  <text x="28" y="316" fill="#58a6ff" font-weight="bold">Cursor</text>
+  <text y="344"><tspan x="118" text-anchor="end" fill="#8b949e">29m</tspan><tspan x="136" fill="#e6edf3">Add a loading spinner</tspan><tspan x="424" fill="#3fb950">&#8594; Fix the login page styling</tspan></text>
+  <text y="370"><tspan x="118" text-anchor="end" fill="#8b949e">2.4h</tspan><tspan x="136" fill="#e6edf3">First sync question</tspan><tspan x="424" fill="#3fb950">&#8594; Track down the duplicate-error bug</tspan></text>
+
+  <text x="28" y="408" fill="#8b949e" font-size="14">7 sessions would be renamed next pass &#183; idle &#8805; 5m &#183; namer=heuristic</text>
+</svg>

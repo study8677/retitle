@@ -22,6 +22,16 @@ title to match the latest work — across all three tools.**
 
 </div>
 
+<p align="center">
+  <img src="assets/demo.svg" alt="retitle rewrites stale Claude Code, Codex and Cursor session titles to match the latest work" width="820">
+</p>
+
+<p align="center"><b>30-second try</b> — no install, writes nothing:</p>
+
+```bash
+uvx --from git+https://github.com/study8677/retitle.git retitle list
+```
+
 ---
 
 ## The problem
@@ -229,6 +239,11 @@ git clone https://github.com/study8677/retitle.git && cd retitle
 pip install -e ".[dev]"
 pytest
 ```
+
+## Star this repo
+
+If `retitle` makes your session list useful again, a ⭐ helps other people find it —
+and motivates more adapters (Aider, Continue, Zed, …). Issues and PRs welcome.
 
 ## License
 
