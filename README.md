@@ -18,6 +18,8 @@ title to match the latest work — across all three tools.**
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](pyproject.toml)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](CONTRIBUTING.md)
 
+**English** · [简体中文](README.zh-CN.md)
+
 </div>
 
 ---
