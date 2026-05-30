@@ -38,6 +38,11 @@ class StateStore:
         self._ensure()
         return self._data.get(tool, {}).get(sid)
 
+    def renamed_count(self, tool: str) -> int:
+        """How many of `tool`'s sessions retitle has renamed (have renamed_at)."""
+        self._ensure()
+        return sum(1 for e in self._data.get(tool, {}).values() if e.get("renamed_at"))
+
     def update(self, tool: str, sid: str, **fields: Any) -> None:
         self._ensure()
         entry = self._data.setdefault(tool, {}).setdefault(sid, {})

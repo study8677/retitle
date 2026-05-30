@@ -3,6 +3,7 @@ import json
 import time
 
 from retitle import cli
+from retitle.config import Config
 from retitle.models import Message, Session
 
 
@@ -101,3 +102,32 @@ def test_search_json_output(capsys, monkeypatch):
     assert data[0]["id"] == "s1"
     assert data[0]["title"] == "Deploy stuff"
     assert data[0]["cwd"] == "/home/me/proj"
+
+
+def test_stats_json(capsys, monkeypatch):
+    now = time.time()
+    sessions = [
+        Session("fake", "s1", "Has a title", last_active=now - 1000),  # stale
+        Session("fake", "s2", None, last_active=now - 10),  # untitled, active
+        Session("fake", "s3", "", last_active=now - 9999),  # untitled, stale
+    ]
+    monkeypatch.setattr(cli.config_mod, "load", lambda path=None: Config(idle_seconds=300))
+    monkeypatch.setattr(cli, "get_adapters", lambda cfg: [FakeAdapter(sessions)])
+    cli.cmd_stats(_args(days=0, json=True))
+    data = json.loads(capsys.readouterr().out)
+    assert data["total"]["sessions"] == 3
+    assert data["total"]["untitled"] == 2
+    assert data["total"]["stale"] == 2  # s1 + s3 (idle > 300s)
+    assert data["tools"][0]["tool"] == "fake"
+
+
+def test_stats_table(capsys, monkeypatch):
+    now = time.time()
+    sessions = [Session("fake", "s1", "Title", last_active=now - 1000)]
+    monkeypatch.setattr(cli.config_mod, "load", lambda path=None: Config(idle_seconds=300))
+    monkeypatch.setattr(cli, "get_adapters", lambda cfg: [FakeAdapter(sessions)])
+    rc = cli.cmd_stats(_args(days=0))
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "FakeTool" in out
+    assert "Total" in out

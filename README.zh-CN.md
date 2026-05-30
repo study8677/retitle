@@ -206,6 +206,7 @@ model = "gpt-4o-mini"
 |------|------|
 | `retitle list` | 预览所有发现的会话及其建议标题（不写入任何东西） |
 | `retitle search <关键词>` | 跨所有工具按标题搜索会话（加 `--content` 连正文一起搜） |
+| `retitle stats` | 快速概览：各工具会话数、多少未命名 / 已空闲 |
 | `retitle once` | 跑一轮重命名后退出 |
 | `retitle run` | 在前台持续运行（可加 `--once`、`--dry-run`） |
 | `retitle install` | 安装并启动后台服务（macOS 用 launchd，Linux 用 systemd） |
@@ -213,7 +214,7 @@ model = "gpt-4o-mini"
 | `retitle status` | 显示配置、检测到的工具、守护进程状态 |
 | `retitle config` | 创建 / 打印配置文件 |
 
-> `retitle list` 和 `retitle search` 也支持 `--json`，方便脚本集成。
+> `retitle list`、`retitle search`、`retitle stats` 都支持 `--json`，方便脚本集成。
 
 ---
 

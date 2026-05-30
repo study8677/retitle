@@ -212,6 +212,7 @@ Any field can be overridden per-invocation: `retitle run --idle 600 --namer anth
 |---------|-------------|
 | `retitle list` | Preview every discovered session and its proposed title (writes nothing) |
 | `retitle search <q>` | Find sessions across all tools by title (add `--content` to grep message text) |
+| `retitle stats` | A quick overview: sessions per tool, how many are untitled / stale |
 | `retitle once` | Run a single rename pass and exit |
 | `retitle run` | Run continuously in the foreground (add `--once`, `--dry-run`) |
 | `retitle install` | Install + start the background service (launchd on macOS, systemd on Linux) |
@@ -219,7 +220,7 @@ Any field can be overridden per-invocation: `retitle run --idle 600 --namer anth
 | `retitle status` | Show config, detected tools, and daemon status |
 | `retitle config` | Create / print the config file |
 
-> `retitle list` and `retitle search` also accept `--json` for scripting.
+> `retitle list`, `retitle search` and `retitle stats` also accept `--json` for scripting.
 
 ---
 

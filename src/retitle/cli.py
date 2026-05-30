@@ -305,6 +305,88 @@ def cmd_search(args) -> int:
     return 0
 
 
+def cmd_stats(args) -> int:
+    cfg = _apply_overrides(config_mod.load(), args)
+    util.set_verbose(args.verbose)
+    adapters = get_adapters(cfg)
+    if not adapters:
+        print("No supported tools found (Claude Code, Codex, Cursor).")
+        return 1
+
+    now = util.now()
+    since = now - args.days * 86400 if args.days else 0.0
+    state = StateStore()
+    state.load()
+
+    rows: list[dict] = []
+    oldest: tuple[float, str] | None = None
+    for adapter in adapters:
+        try:
+            sessions = adapter.discover(since)
+        except Exception as exc:
+            util.log(f"{adapter.name}: stats failed: {exc}", level="warn")
+            continue
+        untitled = sum(1 for s in sessions if not (s.title or "").strip())
+        stale = sum(1 for s in sessions if s.idle_seconds(now) >= cfg.idle_seconds)
+        for s in sessions:
+            if oldest is None or s.last_active < oldest[0]:
+                oldest = (s.last_active, adapter.label)
+        rows.append(
+            {
+                "tool": adapter.name,
+                "label": adapter.label,
+                "sessions": len(sessions),
+                "untitled": untitled,
+                "stale": stale,
+                "renamed": state.renamed_count(adapter.name),
+            }
+        )
+
+    keys = ("sessions", "untitled", "stale", "renamed")
+    total = {k: sum(r[k] for r in rows) for k in keys}
+
+    if getattr(args, "json", False):
+        print(
+            json.dumps(
+                {
+                    "scope_days": args.days or None,
+                    "tools": rows,
+                    "total": total,
+                    "oldest_active_seconds": round(now - oldest[0]) if oldest else None,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
+    scope = "all time" if not args.days else f"last {args.days}d"
+    print()
+    print(bold("retitle stats") + dim(f"   ({scope})"))
+    print()
+    print(bold(f"  {'Tool':<13}{'Sessions':>10}{'Untitled':>10}{'Stale':>8}{'Renamed':>9}"))
+    for r in rows:
+        print(
+            f"  {r['label']:<13}{r['sessions']:>10}{r['untitled']:>10}"
+            f"{r['stale']:>8}{r['renamed']:>9}"
+        )
+    print(dim("  " + "─" * 48))
+    print(
+        f"  {'Total':<13}{total['sessions']:>10}{total['untitled']:>10}"
+        f"{total['stale']:>8}{total['renamed']:>9}"
+    )
+    print()
+    if oldest:
+        print(dim(f"  Oldest active: {util.fmt_dur(now - oldest[0])} ago ({oldest[1]})"))
+    print(
+        dim(
+            f"  Stale = idle ≥ {util.fmt_dur(cfg.idle_seconds)} → retitle will "
+            "retitle these. Run `retitle once` to apply."
+        )
+    )
+    return 0
+
+
 # --------------------------------------------------------------------------- #
 # argument parsing
 # --------------------------------------------------------------------------- #
@@ -373,6 +455,18 @@ def build_parser() -> argparse.ArgumentParser:
     psr.add_argument("--json", action="store_true", help="output JSON instead of a table")
     psr.add_argument("-v", "--verbose", action="store_true", help="verbose logging")
     psr.set_defaults(func=cmd_search)
+
+    pstat = sub.add_parser("stats", help="overview of your sessions across all tools")
+    pstat.add_argument(
+        "--tool",
+        action="append",
+        choices=config_mod.ALL_TOOLS,
+        help="limit to specific tool(s); repeatable",
+    )
+    pstat.add_argument("--days", type=int, default=0, help="limit to last N days (0 = all)")
+    pstat.add_argument("--json", action="store_true", help="output JSON instead of a table")
+    pstat.add_argument("-v", "--verbose", action="store_true", help="verbose logging")
+    pstat.set_defaults(func=cmd_stats)
 
     ps = sub.add_parser("status", help="show config, detected tools and daemon status")
     ps.set_defaults(func=cmd_status)
