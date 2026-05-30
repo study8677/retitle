@@ -62,6 +62,9 @@ def _apply_overrides(cfg: config_mod.Config, args) -> config_mod.Config:
         cfg.max_age_days = args.max_age_days
     if getattr(args, "dry_run", False):
         cfg.dry_run = True
+    if getattr(args, "all", False) and getattr(args, "once", False):
+        cfg.idle_seconds = 0  # include sessions of any age / idleness
+        cfg.max_age_days = 36500
     return cfg
 
 
@@ -79,13 +82,24 @@ def cmd_run(args) -> int:
     config_mod.ensure_default()
     cfg = _apply_overrides(config_mod.load(), args)
     util.set_verbose(args.verbose)
+    if getattr(args, "limit", None) is not None:
+        cfg.batch_size = args.limit  # also caps the daemon's per-pass work
     adapters, namer, state, engine = _build(cfg)
     if not adapters:
         util.log("no supported tools found on this machine.", level="warn")
         return 1
     if args.once:
-        renamed, total = engine.tick()
-        util.log(f"done — {renamed} renamed of {total} considered")
+        all_ = getattr(args, "all", False)
+        limit = 0 if all_ else getattr(args, "limit", None)
+        if all_ and namer.name != "heuristic" and not cfg.dry_run:
+            util.log(
+                f"renaming ALL eligible sessions via '{namer.name}' — this can take "
+                "a while and use credits. Ctrl-C to stop; add --dry-run to preview, "
+                "or --namer heuristic for instant offline titles.",
+                level="warn",
+            )
+        renamed, total = engine.tick(limit=limit, progress=True)
+        util.log(f"done — renamed {renamed} of {total} candidate(s)")
         return 0
     try:
         engine.run_forever()
@@ -423,12 +437,22 @@ def build_parser() -> argparse.ArgumentParser:
     _add_common(pr)
     pr.add_argument("--once", action="store_true", help="single pass, then exit")
     pr.add_argument("--interval", type=int, metavar="SEC", help="seconds between passes")
+    pr.add_argument("--limit", type=int, metavar="N", help="max sessions to rename per pass")
     pr.add_argument("--dry-run", action="store_true", help="log changes without writing")
+    pr.add_argument(
+        "--all", action="store_true", help="with --once: rename ALL eligible sessions now"
+    )
     pr.set_defaults(func=cmd_run)
 
     po = sub.add_parser("once", help="single pass, then exit (alias for `run --once`)")
     _add_common(po)
+    po.add_argument("--limit", type=int, metavar="N", help="max sessions to rename")
     po.add_argument("--dry-run", action="store_true", help="log changes without writing")
+    po.add_argument(
+        "--all",
+        action="store_true",
+        help="rename ALL eligible sessions now (idle 0, no age limit, no batch cap)",
+    )
     po.set_defaults(func=cmd_run, once=True)
 
     pl = sub.add_parser("list", help="preview sessions and the titles retitle would set")
@@ -498,6 +522,7 @@ _DEFAULTS = {
     "limit": 40,
     "path": False,
     "json": False,
+    "all": False,
 }
 
 

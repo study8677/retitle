@@ -21,6 +21,11 @@ idle_seconds = 300
 # How often the daemon scans for idle sessions.
 poll_seconds = 60
 
+# Rename at most this many sessions per scan, so a big backlog doesn't hammer
+# your claude/codex CLI all at once — the daemon works through the rest over the
+# next passes (most-recent first). 0 = no limit. `retitle once --all` ignores it.
+batch_size = 25
+
 # Which tools to manage. Remove any you don't use.
 tools = ["claude-code", "codex", "cursor"]
 
@@ -56,6 +61,7 @@ model = "gpt-4o-mini"
 class Config:
     idle_seconds: int = 300
     poll_seconds: int = 60
+    batch_size: int = 25
     tools: tuple[str, ...] = ALL_TOOLS
     namer: str = "auto"
     max_age_days: int = 7
@@ -83,6 +89,7 @@ def load(path: Path | None = None) -> Config:
     cfg = Config(raw=raw)
     cfg.idle_seconds = int(raw.get("idle_seconds", cfg.idle_seconds))
     cfg.poll_seconds = int(raw.get("poll_seconds", cfg.poll_seconds))
+    cfg.batch_size = int(raw.get("batch_size", cfg.batch_size))
     cfg.namer = str(raw.get("namer", cfg.namer))
     cfg.max_age_days = int(raw.get("max_age_days", cfg.max_age_days))
     cfg.min_user_messages = int(raw.get("min_user_messages", cfg.min_user_messages))

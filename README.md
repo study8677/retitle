@@ -143,6 +143,22 @@ The decision rule for each session is deliberately conservative:
 
 This makes the whole thing **idempotent** and **safe to run continuously**.
 
+**Where the title comes from.** By default retitle shells out to the `claude`
+(or `codex`) CLI you're already logged into — `claude --model haiku -p "…"` — so
+titles are real LLM summaries of the conversation, with no API key. No CLI
+installed? It falls back to the offline heuristic.
+
+**Rename past sessions on demand.** To work through a backlog without calling your
+CLI on everything at once, a pass renames at most `batch_size` sessions
+(default 25), most-recent first; the daemon finishes the rest over later passes.
+
+```bash
+retitle once                # rename the latest batch right now
+retitle once --limit 50     # rename the 50 most-recent eligible sessions
+retitle once --all          # rename ALL eligible history (idle 0, any age; slower)
+retitle once --all --dry-run   # preview the whole backlog without writing
+```
+
 ---
 
 ## Supported tools
@@ -193,6 +209,7 @@ retitle status        # shows what auto resolved to, e.g. "namer=auto → claude
 ```toml
 idle_seconds = 300          # rename after 5 minutes idle
 poll_seconds = 60           # scan once a minute
+batch_size = 25             # rename at most N sessions per scan (0 = no limit)
 tools = ["claude-code", "codex", "cursor"]
 namer = "heuristic"         # heuristic | claude | codex | anthropic | openai
 max_age_days = 7            # ignore sessions older than a week
@@ -215,7 +232,7 @@ Any field can be overridden per-invocation: `retitle run --idle 600 --namer anth
 | `retitle list` | Preview every discovered session and its proposed title (writes nothing) |
 | `retitle search <q>` | Find sessions across all tools by title (add `--content` to grep message text) |
 | `retitle stats` | A quick overview: sessions per tool, how many are untitled / stale |
-| `retitle once` | Run a single rename pass and exit |
+| `retitle once` | Rename the latest batch now (`--limit N`, `--all`, `--dry-run`) |
 | `retitle run` | Run continuously in the foreground (add `--once`, `--dry-run`) |
 | `retitle install` | Install + start the background service (launchd on macOS, systemd on Linux) |
 | `retitle uninstall` | Stop and remove the background service |

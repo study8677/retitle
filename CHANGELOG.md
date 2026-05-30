@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this project uses [SemVer](https://semver.org/).
 
+## [0.4.0] - 2026-05-30
+
+### Added
+- `retitle once --limit N` and `retitle once --all` to rename past sessions on
+  demand, in controlled batches (with progress output).
+
+### Changed
+- Renaming now assesses sessions first (fast, local) and only calls the namer for
+  real candidates, most-recent first, capped at `batch_size` per pass (default 25,
+  a new config option). This keeps the background daemon responsive and avoids
+  calling your `claude`/`codex` CLI on a large backlog all at once.
+
 ## [0.3.0] - 2026-05-30
 
 ### Changed

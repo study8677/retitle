@@ -151,6 +151,33 @@ def test_skips_reread_when_no_activity(tmp_path):
     assert reads["n"] == 1  # only the first pass read the transcript
 
 
+def test_tick_limit_renames_most_recent_first(tmp_path):
+    now = time.time()
+    sessions = [
+        Session("fake", f"s{i}", f"old{i}", last_active=now - 600 - i) for i in range(5)
+    ]
+    transcripts = {f"s{i}": [Message("user", f"build feature number {i}")] for i in range(5)}
+    adapter = FakeAdapter(sessions, transcripts)
+    eng = _engine(tmp_path, adapter, FakeNamer("Fresh"))
+    renamed, total = eng.tick(limit=2)
+    assert total == 5  # all are candidates
+    assert renamed == 2  # but only 2 renamed this pass
+    assert {sid for sid, _ in adapter.writes} == {"s0", "s1"}  # most recent first
+
+
+def test_batch_size_caps_renames_per_pass(tmp_path):
+    now = time.time()
+    sessions = [
+        Session("fake", f"s{i}", f"o{i}", last_active=now - 600 - i) for i in range(5)
+    ]
+    transcripts = {f"s{i}": [Message("user", f"task {i}")] for i in range(5)}
+    adapter = FakeAdapter(sessions, transcripts)
+    eng = _engine(tmp_path, adapter, FakeNamer("X"), batch_size=3)
+    renamed, total = eng.tick()  # no explicit limit -> uses batch_size
+    assert total == 5
+    assert renamed == 3
+
+
 def test_end_to_end_real_claude_adapter(tmp_path, monkeypatch):
     """Full path: real ClaudeCodeAdapter + real Engine + real file I/O."""
     import json
