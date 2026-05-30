@@ -19,6 +19,13 @@ _LEAD_FILLER = re.compile(
     r"now|ok|okay|so|then|next|帮我|请|麻烦|我想|我要|然后|现在|帮忙|给我)\s+",
     re.IGNORECASE,
 )
+# Words / characters that read badly at the end of a truncated title.
+_TRAIL_STOP = {
+    "the", "a", "an", "to", "of", "and", "or", "for", "in", "on", "with",
+    "at", "by", "is", "are", "be", "was", "were", "this", "that", "these",
+    "those", "my", "your", "our", "please", "just", "so", "then", "now", "it",
+}
+_CJK_TRAIL = "的了吗呢吧啊呀嘛哦着呗咯"
 
 
 def _has_cjk(s: str) -> bool:
@@ -26,16 +33,22 @@ def _has_cjk(s: str) -> bool:
 
 
 def _condense(text: str) -> str:
-    """Reduce a message to a topic-sized phrase."""
+    """Reduce a message to a topic-sized phrase, trimming filler and any
+    dangling stop-word/particle so a truncated title still reads cleanly."""
     first = _LEAD_SLASH.sub("", text).strip()
     first = _CLAUSE.split(first, 1)[0].strip() or first
     first = _LEAD_FILLER.sub("", first).strip()
     if _has_cjk(first):
-        return first[:20]
+        first = first[:20]
+        while first and first[-1] in _CJK_TRAIL:
+            first = first[:-1]
+        return first
     words = first.split()
     if len(words) > 9:
-        first = " ".join(words[:9])
-    return first
+        words = words[:9]
+    while len(words) > 2 and words[-1].lower().strip(",.;:'\"") in _TRAIL_STOP:
+        words.pop()
+    return " ".join(words)
 
 
 class HeuristicNamer(Namer):

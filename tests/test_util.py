@@ -21,6 +21,14 @@ def test_is_trivial():
     assert not util.is_trivial("Refactor the authentication module")
 
 
+def test_slash_command_triviality():
+    assert util.is_trivial("/clear")  # bare command
+    assert util.is_trivial("/help")
+    # a slash-command carrying a (CJK, space-less) argument is NOT trivial
+    assert not util.is_trivial("/goal 帮我把折扣率看板改成真实数据")
+    assert not util.is_trivial("/fix the login redirect bug")
+
+
 def test_clean_text_strips_tags_and_paths():
     out = util.clean_text("Fix `bug` in <b>file</b> at /Users/me/proj/app.py now")
     assert "`" not in out

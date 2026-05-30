@@ -40,3 +40,19 @@ def test_cjk_title_is_bounded():
 
 def test_returns_none_without_user_messages():
     assert namer.generate([Message("assistant", "hello")]) is None
+
+
+def test_trims_trailing_stopwords_latin():
+    msgs = [Message("user", "let's migrate the whole database to")]
+    title = namer.generate(msgs)
+    assert title
+    assert not title.lower().endswith(" to")
+    assert "migrate" in title.lower()
+
+
+def test_trims_trailing_particles_cjk():
+    msgs = [Message("user", "把这个登录页面的样式都修复一下吧")]
+    title = namer.generate(msgs)
+    assert title
+    assert not title.endswith("吧")
+    assert "修复" in title

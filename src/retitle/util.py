@@ -165,8 +165,8 @@ def is_trivial(text: str) -> bool:
         return True
     if len(t) <= 1:
         return True
-    if t.startswith("/") and len(t.split()) <= 2:
-        return True
+    if t.startswith("/"):  # a bare slash-command is trivial; one with args is not
+        return len(t.split(None, 1)) == 1
     return False
 
 
