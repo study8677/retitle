@@ -249,3 +249,64 @@ def test_cursor_set_title_corrupt_blob_rolls_back(tmp_path, monkeypatch):
     with pytest.raises(Exception):
         adapter.set_title(s, "New")
     assert _header_name(db, cid) == "Old"  # atomic: header untouched
+
+
+# --------------------------------------------------------------------------- #
+# Robustness: malformed / missing data must degrade gracefully, not crash
+# --------------------------------------------------------------------------- #
+def test_claude_skips_corrupt_lines(tmp_path, monkeypatch):
+    projects = tmp_path / "projects"
+    proj = projects / "-Users-me-proj"
+    proj.mkdir(parents=True)
+    sid = "c0000000-0000-0000-0000-000000000000"
+    f = proj / f"{sid}.jsonl"
+    f.write_text(
+        '{"type":"last-prompt","lastPrompt":"Real request one","sessionId":"%s"}\n'
+        "this line is not json at all {oops\n"
+        '{"type":"assistant","message":{"role":"assistant","content":'
+        '[{"type":"text","text":"ok"}]}}\n'
+        '{"type":"ai-title","aiTitle":"Good title","sessionId":"%s"}\n' % (sid, sid)
+    )
+    monkeypatch.setattr(claude_code, "_projects_root", lambda: projects)
+    adapter = claude_code.ClaudeCodeAdapter()
+    s = adapter.discover(0)[0]
+    assert s.title == "Good title"  # ai-title read past the corrupt line
+    users = [m.text for m in adapter.read_transcript(s) if m.role == "user"]
+    assert "Real request one" in users  # corrupt line skipped, real prompt kept
+
+
+def test_codex_read_transcript_falls_back_when_rollout_missing(tmp_path, monkeypatch):
+    db = tmp_path / "state_5.sqlite"
+    con = sqlite3.connect(db)
+    con.execute(
+        "CREATE TABLE threads (id TEXT PRIMARY KEY, title TEXT, rollout_path TEXT, "
+        "updated_at_ms INTEGER, cwd TEXT, archived INTEGER, first_user_message TEXT)"
+    )
+    now_ms = int(time.time() * 1000)
+    con.execute(
+        "INSERT INTO threads VALUES (?,?,?,?,?,?,?)",
+        ("t1", "Title", "/no/such/rollout.jsonl", now_ms, "/p", 0, "The original request"),
+    )
+    con.commit()
+    con.close()
+    monkeypatch.setattr(codex, "_find_state_db", lambda: db)
+    adapter = codex.CodexAdapter()
+    s = adapter.discover(0)[0]
+    msgs = adapter.read_transcript(s)  # rollout file is gone
+    assert len(msgs) == 1
+    assert msgs[0].text == "The original request"  # falls back to first_user_message
+
+
+def test_cursor_discover_survives_corrupt_headers(tmp_path, monkeypatch):
+    db = tmp_path / "state.vscdb"
+    con = sqlite3.connect(db)
+    con.execute("CREATE TABLE ItemTable (key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("CREATE TABLE cursorDiskKV (key TEXT PRIMARY KEY, value TEXT)")
+    con.execute(
+        "INSERT INTO ItemTable VALUES (?,?)",
+        ("composer.composerHeaders", "{this is not valid json"),
+    )
+    con.commit()
+    con.close()
+    monkeypatch.setattr(cursor, "_vscdb", lambda: db)
+    assert cursor.CursorAdapter().discover(0) == []  # no crash, just empty
