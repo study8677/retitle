@@ -188,8 +188,8 @@ back to a fully-offline heuristic if neither is installed. You never paste a key
 |---------|--------------|----------|
 | `auto` | your logged-in `claude` / `codex` CLI, else `heuristic` | **none** · default |
 | `heuristic` | a cleaned-up snippet of your latest message; instant, offline | none |
-| `claude` | always the `claude` CLI (uses the fast Haiku model) | none — your login |
-| `codex` | always the `codex` CLI | none — your login |
+| `claude` | always the `claude` CLI (fast Haiku model) | none — your login |
+| `codex` | always the `codex` CLI (`gpt-5-codex`) | none — your login |
 | `anthropic` | Anthropic API directly | `ANTHROPIC_API_KEY` |
 | `openai` | OpenAI API directly | `OPENAI_API_KEY` |
 

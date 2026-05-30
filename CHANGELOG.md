@@ -3,6 +3,19 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this project uses [SemVer](https://semver.org/).
 
+## [0.4.1] - 2026-05-30
+
+### Fixed
+- **The `codex` namer was broken** — it read the last line of `codex exec`'s
+  noisy transcript, which is `tokens used: N`, not the title. It now uses
+  `codex exec --output-last-message <file>` and reads the clean final message.
+- The `codex` namer now defaults to the fast `gpt-5-codex` model (the previously
+  implied `gpt-5.3-codex` does not exist). Configurable via `[codex] model`.
+- Raised the CLI namer timeout to 90s so slower reasoning models don't time out.
+
+### Added
+- `[claude]` and `[codex]` config sections to override the namer model.
+
 ## [0.4.0] - 2026-05-30
 
 ### Added

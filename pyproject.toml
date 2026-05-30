@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "retitle"
-version = "0.4.0"
+version = "0.4.1"
 description = "Auto-rename idle Claude Code, Codex & Cursor sessions to match what they're actually about."
 readme = "README.md"
 license = { text = "MIT" }

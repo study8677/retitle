@@ -49,6 +49,15 @@ min_user_messages = 1
 # Set true to preview renames without writing anything.
 dry_run = false
 
+# Model overrides for the CLI namers (optional). These reuse your existing
+# login — no API key. Defaults are the fast/cheap models, which are plenty for
+# a short title.
+[claude]
+model = "haiku"
+
+[codex]
+model = "gpt-5-codex"
+
 [anthropic]
 model = "claude-haiku-4-5"
 

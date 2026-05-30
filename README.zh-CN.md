@@ -182,7 +182,7 @@ retitle once --all --dry-run   # 预览整个积压，不写入
 | `auto` | 用你已登录的 `claude` / `codex` CLI，否则 `heuristic` | **不要** · 默认 |
 | `heuristic` | 把你最近一条消息清洗成标题；即时、离线 | 不要 |
 | `claude` | 始终用 `claude` CLI（默认快速的 Haiku 模型） | 不要——复用登录 |
-| `codex` | 始终用 `codex` CLI | 不要——复用登录 |
+| `codex` | 始终用 `codex` CLI（`gpt-5-codex`） | 不要——复用登录 |
 | `anthropic` | 直连 Anthropic API | 需要 `ANTHROPIC_API_KEY` |
 | `openai` | 直连 OpenAI API | 需要 `OPENAI_API_KEY` |
 
