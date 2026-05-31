@@ -2,13 +2,18 @@
 
 # 🏷️ retitle
 
-### 让你的 AI 编程会话，始终叫它*真正*在聊的事。
+### 你的 AI 会话是一笔宝贵财富。烂标题把它埋了，retitle 帮你重新挖出来。
 
-Claude Code、Codex、Cursor 都只用你的**第一条消息**给会话命名——然后就再也不管了。
-两小时后对话早已聊到完全不同的东西，侧边栏却还写着*「检查分支是否同步」*。
-乘以五十个会话，你的历史记录就彻底没法用来找东西了。
+每一次和 Claude Code、Codex、Cursor 的会话，都是你辛苦攒下的上下文——你追过的 bug、
+做过的决策、上线的代码。这是一笔**宝贵的财富**。可三个工具都只用你的**第一条消息**
+给会话命名，然后永远冻在那儿。一小时后工作早已转向，侧边栏却还写着*「检查分支是否同步」*。
+乘以几百个会话，你最值钱的历史就变成了一座**搜不动的坟场**。
 
-**`retitle` 在后台静静运行，每当一个会话空闲下来，就把它的标题改成最新在做的事——三个工具通吃。** 而 `retitle search` 让你一次性在 Claude Code、Codex、Cursor 里找回任何历史会话。
+这么好的财富，不该被一个过时的标题浪费掉。
+
+**`retitle` 在后台静静运行，一旦会话空闲下来，就把标题改成这次工作*真正*变成的样子
+——三个工具通吃。** 然后用 `retitle search` 把这笔历史财富挖出来：一次性在 Claude Code、
+Codex、Cursor 里找回任何过去的会话。
 
 [![CI](https://github.com/study8677/retitle/actions/workflows/ci.yml/badge.svg)](https://github.com/study8677/retitle/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -32,7 +37,7 @@ uvx --from git+https://github.com/study8677/retitle.git retitle list
 
 ---
 
-## 痛点
+## 痛点：一座搜不动的金矿
 
 每个 AI 编程工具都只在开场时根据第一条提示词命名一次，然后就把标题冻在那儿：
 
@@ -42,7 +47,7 @@ uvx --from git+https://github.com/study8677/retitle.git retitle list
 | **Codex** | `修个 README 里的错别字` | *排查不稳定的 CI 流水线* |
 | **Claude Code** | `检查分支是否同步` | *实现审计日志功能* |
 
-标题在十分钟内就成了谎言。`retitle` 让它始终如实。
+标题在十分钟内就成了谎言。于是一周后，你*明明记得*之前用 AI 解过这个一模一样的 bug，却怎么也翻不到那次对话——财富明明在，却被埋住了。`retitle` 让标题始终如实，这座金矿才能一直可被搜索。
 
 <sub>（示例均为虚构——`retitle` 只在本地读取你的会话，绝不会把它们发布到任何地方。）</sub>
 
@@ -276,7 +281,7 @@ pytest
 
 ## 点个 Star
 
-如果 retitle 让你的会话列表重新变得有用，点个 ⭐ 能帮更多人发现它，
+你的 AI 会话是一笔值得守护的财富。如果 retitle 帮你把它捡了回来，点个 ⭐ 能帮更多人发现它，
 也会激励我适配更多工具（Aider、Continue、Zed……）。欢迎提 issue 和 PR。
 
 ## 许可证

@@ -2,16 +2,19 @@
 
 # 🏷️ retitle
 
-### Your AI coding sessions, always named after what they're *actually* about.
+### Your AI coding sessions are a goldmine. Bad titles bury it. retitle digs it back up.
 
-Claude Code, Codex and Cursor name a chat from your **first message** — then never look back.
-Two hours later the conversation is about something completely different, but the sidebar
-still says *"Check if branches are synced."* Multiply that by fifty sessions and your history
-is useless for finding anything.
+Every session with Claude Code, Codex or Cursor is hard-won context — the bugs you chased,
+the decisions you made, the code you shipped. It's a **valuable asset**. But all three tools
+title a chat from your **first message** and then freeze it forever. An hour later the work has
+moved on, yet the sidebar still says *"Check if branches are synced."* Multiply that by hundreds
+of sessions and your most valuable history becomes an unsearchable graveyard.
 
-**`retitle` runs quietly in the background and, whenever a session goes idle, rewrites its
-title to match the latest work — across all three tools.** And `retitle search` lets you
-find any past session across Claude Code, Codex and Cursor at once.
+That asset is too good to waste on a stale title.
+
+**`retitle` runs quietly in the background and, once a session goes idle, rewrites its title to
+match what the work actually became — across all three tools.** Then `retitle search` lets you
+mine that history: find any past session across Claude Code, Codex and Cursor at once.
 
 [![CI](https://github.com/study8677/retitle/actions/workflows/ci.yml/badge.svg)](https://github.com/study8677/retitle/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -35,9 +38,9 @@ uvx --from git+https://github.com/study8677/retitle.git retitle list
 
 ---
 
-## The problem
+## The problem: a goldmine you can't search
 
-Every AI coding tool auto-titles a session once, from its opening prompt, and freezes it there:
+Every AI coding tool titles a session once, from its opening prompt, and freezes it there:
 
 | Tool | What the sidebar says | What the session is now about |
 |------|----------------------|--------------------------------|
@@ -45,7 +48,9 @@ Every AI coding tool auto-titles a session once, from its opening prompt, and fr
 | **Codex** | `Fix a typo in the README` | *debugging a flaky CI pipeline* |
 | **Claude Code** | `Check if branches are synced` | *implementing the audit-log feature* |
 
-The title is a lie within ten minutes. `retitle` keeps it honest.
+The title is a lie within ten minutes. So a week later, when you *know* you solved this exact
+bug with the AI before, you can't find the conversation — the asset is there, but it's buried.
+`retitle` keeps the title honest, so the goldmine stays searchable.
 
 <sub>(Examples are illustrative — `retitle` reads your sessions locally and never publishes them anywhere.)</sub>
 
@@ -288,8 +293,8 @@ pytest
 
 ## Star this repo
 
-If `retitle` makes your session list useful again, a ⭐ helps other people find it —
-and motivates more adapters (Aider, Continue, Zed, …). Issues and PRs welcome.
+Your AI sessions are an asset worth keeping. If `retitle` helps you reclaim yours, a ⭐ helps
+other people find it — and motivates more adapters (Aider, Continue, Zed, …). Issues and PRs welcome.
 
 ## License
 
